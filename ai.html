@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Village Dangwar Social Media</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: url('background.jpg'); /* Add your background image */
+            background-size: cover;
+            background-repeat: no-repeat;
+            color: #333;
+        }
+
+        header {
+            background-color: rgba(192, 57, 43, 0.8); /* Semi-transparent red */
+            color: white;
+            padding: 10px 20px;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav h1 {
+            margin: 0;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            border: 1px solid white;
+            border-radius: 5px;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .hero h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .slideshow img {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .feed {
+            padding: 20px;
+        }
+
+        #postInput {
+            width: 100%;
+            height: 100px;
+            margin-top: 10px;
+        }
+
+        #postButton {
+            margin-top: 10px;
+            padding: 10px 20px;
+        }
+
+        .gallery {
+            padding: 20px;
+        }
+
+        .gallery h2 {
+            text-align: center;
+        }
+
+        .gallery-images {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .gallery-images img {
+            width: 30%;
+            margin: 10px;
+            border-radius: 10px;
+        }
+
+        .about {
+            padding: 20px;
+        }
+
+        footer {
+            background-color: rgba(192, 57, 43, 0.8); /* Semi-transparent red */
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .post {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .comment {
+            margin-top: 10px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .commentInput {
+            width: 80%;
+            margin-top: 10px;
+        }
+
+        .commentButton {
+            padding: 5px 10px;
+        }
+
+        .notification {
+            color: green;
+            font-weight: bold;
+        }
+
+        .profile {
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .followButton {
+            padding: 5px 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>Village Dangwar Social</h1>
+            <a href="#login" id="loginLink">Login / Signup</a>
+            <a href="#logout" id="logoutLink" style="display:none;">Logout</a>
+            <a href="#profile" id="profileLink" style="display:none;">Profile</a>
+        </nav>
+    </header>
+    <main>
+        <section class="hero">
+            <h2>✨ Navratri Puja – Dangwar, Palamu ✨</h2>
+            <div class="slideshow">
+                <img src="image1.jpg" alt="Goddess Durga">
+                <img src="image2.jpg" alt="Navratri Pandal">
+                <img src="image3.jpg" alt="Dangwar Village">
+            </div>
+        </section>
+
+        <section class="feed">
+            <h2>Feed</h2>
+            <div id="postContainer"></div>
+            <textarea id="postInput" placeholder="What's on your mind?"></textarea>
+            <button id="postButton">Post</button>
+            <div id="notificationContainer"></div>
+        </section>
+
+        <section class="gallery">
+            <h2>Special Navratri Gallery</h2>
+            <div class="gallery-images">
+                <img src="gallery1.jpg" alt="Gallery Image 1">
+                <img src="gallery2.jpg" alt="Gallery Image 2">
+                <img src="gallery3.jpg" alt="Gallery Image 3">
+            </div>
+        </section>
+
+        <section class="about">
+            <h2>About Dangwar Village</h2>
+            <p>Dangwar is a beautiful village located in Palamu, Jharkhand...</p>
+        </section>
+
+        <section class="profile" id="profileSection" style="display:none;">
+            <h2>Your Profile</h2>
+            <div id="userPosts"></div>
+            <h3>Followers</h3>
+            <div id="followersList"></div>
+            <h3>Following</h3>
+            <div id="followingList"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>About Us | Contact Information | Social Media Links</p>
+        <p>Copyright © Navratri Dangwar</p>
+    </footer>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBy9kzppsNtMhUfBsflijHZqk4L3BQL0Fs",
+            authDomain: "village-dangwar.firebaseapp.com",
+            projectId: "village-dangwar",
+            storageBucket: "village-dangwar.appspot.com",
+            messagingSenderId: "528655377784",
+            appId: "1:528655377784:web:d0d1b19ef0d7f424fcd48d" // Updated App ID
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Authentication
+        document.getElementById('loginLink').addEventListener('click', function(event) {
+            event.preventDefault();
+            const email = prompt("Enter your email:");
+            const password = prompt("Enter your password:");
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    alert('Logged in successfully!');
+                    document.getElementById('loginLink').style.display = 'none';
+                    document.getElementById('logoutLink').style.display = 'block';
+                    document.getElementById('profileLink').style.display = 'block';
+                    loadPosts();
+                    loadUser Profile();
+                })
+                .catch(error => {
+                    alert(error.message);
+                });
+        });
+
+        document.getElementById('logoutLink').addEventListener('click', function(event) {
+            event.preventDefault();
+            auth.signOut().then(() => {
+                alert('Logged out successfully!');
+                document.getElementById('loginLink').style.display = 'block';
+                document.getElementById('logoutLink').style.display = 'none';
+                document.getElementById('profileLink').style.display = 'none';
+                document.getElementById('profileSection').style.display = 'none';
+            });
+        });
+
+        document.getElementById('profileLink').addEventListener('click', function(event) {
+            event.preventDefault();
+            document.getElementById('profileSection').style.display = 'block';
+            loadUser Profile();
+        });
+
+        // Posting
+        document.getElementById('postButton').addEventListener('click', function() {
+            const postInput = document.getElementById('postInput');
+            if (postInput.value.trim() !== '') {
+                const user = auth.currentUser ;
+                db.collection('posts').add({
+                    content: postInput.value,
+                    userId: user.uid,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    comments: []
+                }).then(() => {
+                    postInput.value = ''; // Clear the input
+                    loadPosts();
+                }).catch(error => {
+                    alert(error.message);
+                });
+            } else {
+                alert('Please enter a post.');
+            }
+        });
+
+        // Load posts
+        function loadPosts() {
+            const postContainer = document.getElementById('postContainer');
+            postContainer.innerHTML = ''; // Clear existing posts
+            const user = auth.currentUser ;
+
+            // Get followed users
+            db.collection('users').doc(user.uid).get().then(userDoc => {
+                const following = userDoc.data().following || [];
+                following.push(user.uid); // Include self
+
+                db.collection('posts').where('userId', 'in', following).orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+                    snapshot.forEach(doc => {
+                        const post = document.createElement('div');
+                        post.classList.add('post');
+                        post.innerHTML = `
+                            <p>${doc.data().content}</p>
+                            <div class="comments" id="comments-${doc.id}"></div>
+                            <input type="text" class="commentInput" placeholder="Add a comment..." id="commentInput-${doc.id}">
+                            <button class="commentButton" data-id="${doc.id}">Comment</button>
+                        `;
+                        postContainer.prepend(post);
+
+                        // Load comments for each post
+                        loadComments(doc.id);
+
+                        // Add comment functionality
+                        const commentButton = post.querySelector('.commentButton');
+                        commentButton.addEventListener('click', function() {
+                            const commentInput = document.getElementById(`commentInput-${doc.id}`);
+                            if (commentInput.value.trim() !== '') {
+                                db.collection('posts').doc(doc.id).update({
+                                    comments: firebase.firestore.FieldValue.arrayUnion(commentInput.value)
+                                }).then(() => {
+                                    commentInput.value = ''; // Clear the input
+                                    loadComments(doc.id);
+                                    notifyUser (`New comment on your post: "${commentInput.value}"`);
+                                }).catch(error => {
+                                    alert(error.message);
+                                });
+                            } else {
+                                alert('Please enter a comment.');
+                            }
+                        });
+                    });
+                });
+            });
+        }
+
+        // Load comments for a post
+        function loadComments(postId) {
+            const commentsContainer = document.getElementById(`comments-${postId}`);
+            db.collection('posts').doc(postId).get().then(doc => {
+                const comments = doc.data().comments || [];
+                commentsContainer.innerHTML = comments.map(comment => `<div class="comment">${comment}</div>`).join('');
+            });
+        }
+
+        // Load user profile
+        function loadUser Profile() {
+            const user = auth.currentUser ;
+            if (user) {
+                db.collection('users').doc(user.uid).get().then(userDoc => {
+                    const userData = userDoc.data();
+                    const userPostsContainer = document.getElementById('userPosts');
+                    userPostsContainer.innerHTML = `<h3>${userData.name}'s Posts</h3>`;
+                    
+                    // Load user posts
+                    db.collection('posts').where('userId', '==', user.uid).get().then(snapshot => {
+                        snapshot.forEach(doc => {
+                            const post = document.createElement('div');
+                            post.classList.add('post');
+                            post.innerHTML = `<p>${doc.data().content}</p>`;
+                            userPostsContainer.appendChild(post);
+                        });
+                    });
+
+                    // Load followers and following
+                    const followersList = document.getElementById('followersList');
+                    followersList.innerHTML = userData.followers ? userData.followers.join(', ') : 'No followers';
+
+                    const followingList = document.getElementById('followingList');
+                    followingList.innerHTML = userData.following ? userData.following.join(', ') : 'Not following anyone';
+                });
+            }
+        }
+
+        // Notify user
+        function notifyUser (message) {
+            const notificationContainer = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.classList.add('notification');
+            notification.textContent = message;
+            notificationContainer.appendChild(notification);
+            setTimeout(() => {
+                notificationContainer.removeChild(notification);
+            }, 5000); // Remove notification after 5 seconds
+        }
+
+        // Real-time listener for authentication state
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loadPosts();
+                document.getElementById('loginLink').style.display = 'none';
+                document.getElementById('logoutLink').style.display = 'block';
+                document.getElementById('profileLink').style.display = 'block';
+                document.getElementById('profileSection').style.display = 'none';
+            } else {
+                document.getElementById('loginLink').style.display = 'block';
+                document.getElementById('logoutLink').style.display = 'none';
+                document.getElementById('profileLink').style.display = 'none';
+                document.getElementById('profileSection').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
